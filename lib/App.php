@@ -21,8 +21,8 @@
 
 namespace OCA\Notifications;
 
-
 use OCA\Notifications\Exceptions\NotificationNotFoundException;
+use OCA\Notifications\Push\WebPush;
 use OCP\Notification\IApp;
 use OCP\Notification\INotification;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -32,10 +32,13 @@ class App implements IApp {
 	protected $handler;
 	/** @var Push */
 	protected $push;
+	/** @var WebPush */
+	protected $webPush;
 
-	public function __construct(Handler $handler, Push $push) {
+	public function __construct(Handler $handler, Push $push, WebPush $webPush) {
 		$this->handler = $handler;
 		$this->push = $push;
+		$this->webPush = $webPush;
 	}
 
 	public function setOutput(OutputInterface $output): void {
@@ -53,6 +56,7 @@ class App implements IApp {
 		try {
 			$notificationToPush = $this->handler->getById($notificationId, $notification->getUser());
 			$this->push->pushToDevice($notificationId, $notificationToPush);
+			$this->webPush->pushNotify($notification->getUser());
 		} catch (NotificationNotFoundException $e) {
 			throw new \InvalidArgumentException('Error while preparing push notification');
 		}
@@ -77,6 +81,7 @@ class App implements IApp {
 		foreach ($deleted as $user => $notifications) {
 			foreach ($notifications as $notificationId) {
 				$this->push->pushDeleteToDevice($user, $notificationId);
+				$this->webPush->pushDelete($user);
 			}
 		}
 	}

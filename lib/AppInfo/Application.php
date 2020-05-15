@@ -26,6 +26,7 @@ use OCA\Notifications\App;
 use OCA\Notifications\Capabilities;
 use OCA\Notifications\Handler;
 use OCA\Notifications\Notifier\AdminNotifications;
+use OCA\Notifications\Push\WebPushValidator;
 use OCP\AppFramework\IAppContainer;
 use OCP\Util;
 
@@ -47,6 +48,7 @@ class Application extends \OCP\AppFramework\App {
 		$this->registerAdminNotifications();
 		$this->registerUserInterface();
 		$this->registerUserDeleteHook();
+		$this->registerWebPush();
 	}
 
 	protected function registerNotificationApp(): void {
@@ -85,5 +87,11 @@ class Application extends \OCP\AppFramework\App {
 		/** @var Handler $handler */
 		$handler = $this->getContainer()->query(Handler::class);
 		$handler->deleteByUser($params['uid']);
+	}
+
+	protected function registerWebPush(): void {
+		/** @var \OCP\Push\IManager $manager */
+		$manager = $this->getContainer()->query(\OCP\Push\IManager::class);
+		$manager->registerAccessValidator('notifications', WebPushValidator::class);
 	}
 }
